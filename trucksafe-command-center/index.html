@@ -1,161 +1,584 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0a0d12">
-  <meta name="description" content="TruckSafe AI Command — central multiagente para desenvolvimento do TruckSafe.">
+  <meta name="theme-color" content="#090c11">
   <title>TruckSafe AI Command</title>
+
   <style>
-    :root{color-scheme:dark;--bg:#090c11;--panel:#0f141c;--panel2:#121923;--panel3:#171f2a;--line:#252e3a;--text:#eef3f8;--muted:#8f9cac;--green:#b7f36b;--green2:#8ad83e;--blue:#8bbcff;--amber:#ffd27a;--red:#ff9292;--radius:16px;--shadow:0 18px 60px #0005}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}body{background:radial-gradient(ellipse at 56% -20%,#1a2a25 0,transparent 44%),var(--bg)}button,input,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--green);outline-offset:3px}button:disabled{opacity:.5;cursor:not-allowed}.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}.sidebar{background:#0a0e14d9;border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:24px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;align-items:center;gap:11px;padding:0 10px}.brandmark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--green);color:#13190d;font-weight:950;letter-spacing:-2px;font-size:20px;box-shadow:0 0 28px #b7f36b1c}.brand-name{font-weight:800;font-size:14px;letter-spacing:.2px}.brand-sub{font-size:10px;color:var(--muted);letter-spacing:1.4px;margin-top:3px}.workspace-label{padding:0 11px;font-size:10px;text-transform:uppercase;color:#677586;letter-spacing:1.6px;font-weight:800}.nav{display:flex;flex-direction:column;gap:4px}.nav button{color:#9aa7b7;text-align:left;display:flex;align-items:center;gap:12px;border:1px solid transparent;background:transparent;padding:11px 12px;border-radius:10px;font-size:13px;font-weight:600;transition:.15s}.nav button:hover{background:#ffffff08;color:var(--text)}.nav button.active{background:#b7f36b12;color:var(--green);border-color:#b7f36b24}.nav .ico{width:18px;height:18px;display:grid;place-items:center;font-size:16px}.count{margin-left:auto;font-size:10px;background:#31302a;color:var(--amber);padding:3px 7px;border-radius:20px}.side-bottom{margin-top:auto;display:grid;gap:12px}.project-card{border:1px solid var(--line);background:linear-gradient(135deg,#151d24,#10151c);padding:13px;border-radius:14px}.project-heading{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700}.project-dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 10px #b7f36b66}.project-card p{color:var(--muted);font-size:11px;line-height:1.5;margin:10px 0}.project-meta{color:#687686;font-size:10px}.user-row{display:flex;align-items:center;gap:10px;padding:0 8px}.avatar{width:31px;height:31px;display:grid;place-items:center;border:1px solid #38444f;border-radius:50%;background:#1d2830;color:var(--green);font-size:11px;font-weight:800}.user-info{min-width:0}.user-info strong{display:block;font-size:12px}.user-info small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.more{margin-left:auto;background:none;border:0;color:var(--muted);font-size:20px}.main{min-width:0;padding:0 32px 38px;max-width:1720px;width:100%;margin:0 auto}.topbar{height:76px;border-bottom:1px solid #232b35;display:flex;align-items:center;justify-content:space-between;gap:15px}.crumb{color:var(--muted);font-size:12px}.crumb strong{color:#ecf0f6;font-weight:650}.top-actions{display:flex;align-items:center;gap:9px}.connection{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#0e131a}.connection i{width:6px;height:6px;border-radius:50%;background:#e9b75b}.connection.connected i{background:var(--green);box-shadow:0 0 8px #b7f36b55}.icon-btn,.small-btn{border:1px solid var(--line);background:#111720;color:#c7d0da;border-radius:9px;padding:9px 11px;font-size:12px}.icon-btn:hover,.small-btn:hover{border-color:#556475}.primary-btn{border:1px solid #ccff91;background:var(--green);color:#11180b;border-radius:9px;padding:10px 14px;font-weight:800;font-size:12px;box-shadow:0 4px 18px #b7f36b12;transition:.15s}.primary-btn:hover{background:#caff90;transform:translateY(-1px)}.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:28px 0 22px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}.title-row h1{font-size:clamp(26px,3vw,36px);letter-spacing:-1.5px;margin:0;font-weight:760}.title-row p{margin:9px 0 0;color:var(--muted);font-size:13px;line-height:1.5}.date-label{color:#718093;font-size:11px;white-space:nowrap;padding-bottom:4px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:19px}.stat{border:1px solid var(--line);background:linear-gradient(130deg,#111720,#0e131a);padding:16px;border-radius:14px;min-width:0}.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px}.stat-icon{font-size:15px;color:#9dacbd}.stat-value{font-size:27px;font-weight:760;letter-spacing:-1px;margin-top:12px}.stat-note{font-size:10px;color:#788798;margin-top:5px}.stat-note .good{color:var(--green)}.workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(290px,.8fr);gap:17px;align-items:start}.left-col,.right-col{display:grid;gap:17px;min-width:0}.panel{border:1px solid var(--line);background:linear-gradient(150deg,#111720f5,#0d1219f8);border-radius:var(--radius);overflow:hidden;min-width:0}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px 18px 14px;border-bottom:1px solid #202833}.panel-title{font-size:13px;font-weight:750;display:flex;align-items:center;gap:9px}.panel-title span{color:var(--muted);font-size:11px;font-weight:500}.subtle{color:var(--muted);font-size:11px}.chat-panel{display:flex;flex-direction:column;min-height:480px}.chat-topline{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #202833}.coordinator{display:flex;align-items:center;gap:10px}.agent-avatar{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#b7f36b18;border:1px solid #b7f36b39;color:var(--green);font-size:15px}.coordinator strong{font-size:12px;display:block}.coordinator small{font-size:10px;color:var(--muted);display:block;margin-top:3px}.online-pill{font-size:9px;letter-spacing:.6px;color:var(--green);border:1px solid #b7f36b2b;border-radius:20px;padding:5px 7px}.chat-messages{padding:18px;display:flex;flex-direction:column;gap:17px;min-height:245px;max-height:440px;overflow:auto;scroll-behavior:smooth}.message{display:flex;gap:10px;align-items:flex-start}.message.user{flex-direction:row-reverse}.message .bubble{max-width:calc(100% - 42px);font-size:12px;line-height:1.65;color:#d6dee8;background:#171f29;border:1px solid #27313d;padding:11px 13px;border-radius:4px 13px 13px 13px;white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{background:#b7f36b12;border-color:#b7f36b30;border-radius:13px 4px 13px 13px;color:#edf4e3}.message .who{font-size:10px;font-weight:750;margin-bottom:5px;color:var(--green)}.message.user .who{color:#c0d2e8}.bubble p{margin:0}.bubble ul{margin:7px 0 0;padding-left:17px}.bubble li{margin:3px 0}.prompt-chips{display:flex;flex-wrap:wrap;gap:7px;padding:0 18px 15px}.chip{background:#101721;border:1px solid #293442;color:#aebaca;border-radius:7px;padding:7px 9px;font-size:10px;text-align:left}.chip:hover{border-color:#769854;color:#dbefc7}.composer{padding:13px;border-top:1px solid #202833;background:#0b1016}.composer-wrap{border:1px solid #34404d;background:#111821;border-radius:12px;padding:11px 12px 8px}.composer textarea{width:100%;background:transparent;border:0;outline:none;color:var(--text);resize:vertical;min-height:53px;max-height:160px;font-size:12px;line-height:1.6}.composer textarea::placeholder{color:#657386}.composer-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px}.composer-hint{font-size:10px;color:#748193}.send-btn{display:flex;align-items:center;gap:7px}.flow-steps{padding:16px 18px 19px}.flow-step{display:grid;grid-template-columns:25px minmax(0,1fr) auto;gap:10px;position:relative;padding-bottom:18px}.flow-step:last-child{padding-bottom:0}.flow-step:not(:last-child):before{content:"";position:absolute;width:1px;background:#303b48;left:12px;top:26px;bottom:0}.step-icon{width:25px;height:25px;display:grid;place-items:center;border-radius:8px;background:#19212b;border:1px solid #2f3b48;color:#9babbc;font-size:11px;z-index:1}.flow-step.done .step-icon{border-color:#b7f36b45;color:var(--green);background:#b7f36b11}.flow-step.active .step-icon{border-color:#8bbcff66;color:var(--blue);background:#8bbcff12}.step-body strong{display:block;font-size:11px;font-weight:700;margin-top:2px}.step-body small{display:block;font-size:10px;line-height:1.5;color:var(--muted);margin-top:4px}.step-status{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#7b8b9c;padding-top:5px;white-space:nowrap}.flow-step.active .step-status{color:var(--blue)}.flow-step.done .step-status{color:var(--green)}.agent-list{padding:3px 15px 10px}.agent-row{display:flex;align-items:center;gap:11px;padding:12px 2px;border-bottom:1px solid #202833}.agent-row:last-child{border-bottom:0}.agent-icon{width:35px;height:35px;display:grid;place-items:center;border-radius:10px;background:#1a222d;border:1px solid #2a3543;font-size:16px;flex-shrink:0}.agent-name{font-size:11px;font-weight:720}.agent-desc{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4}.agent-meta{margin-left:auto;text-align:right;flex-shrink:0}.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#8898a8;margin-right:5px}.agent-state{font-size:9px;color:#8291a2}.agent-state.ready{color:var(--green)}.approval-list{padding:4px 14px 12px}.approval{border:1px solid #293340;border-radius:11px;padding:12px;margin-top:10px;background:#111822}.approval-top{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--amber);font-weight:700}.approval-top .warn{font-size:14px}.approval h4{font-size:11px;margin:9px 0 6px}.approval p{color:var(--muted);font-size:10px;line-height:1.5;margin:0 0 11px}.approval-actions{display:flex;gap:7px}.approval-actions button{font-size:10px;padding:7px 9px;flex:1}.approve{border:1px solid #b7f36b44;background:#b7f36b13;color:var(--green);border-radius:7px}.reject{border:1px solid #414b58;background:#171f29;color:#a8b4c2;border-radius:7px}.activity-list{padding:7px 17px 16px}.activity{display:grid;grid-template-columns:23px minmax(0,1fr);gap:10px;padding:10px 0;position:relative}.activity-mark{width:22px;height:22px;border-radius:7px;border:1px solid #303b48;display:grid;place-items:center;font-size:10px;color:#adbac8}.activity-text{font-size:10px;color:#cbd4de;line-height:1.5}.activity-text strong{font-weight:700;color:#eef2f6}.activity-time{color:#718093;font-size:9px;margin-top:4px}.empty{padding:25px 15px;text-align:center;color:var(--muted);font-size:11px;line-height:1.6}.view{display:none}.view.active{display:block}.page-panel{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:20px;margin-top:20px}.page-panel h2{font-size:18px;margin:0 0 7px}.page-panel>p{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 18px}.agent-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.agent-card{padding:17px;border:1px solid var(--line);border-radius:13px;background:#111720}.agent-card h3{font-size:12px;margin:12px 0 7px}.agent-card p{font-size:11px;line-height:1.6;color:var(--muted);margin:0 0 13px}.task-row{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}.task-row:last-child{border-bottom:0}.task-main{min-width:0;flex:1}.task-main strong{font-size:12px;display:block}.task-main small{font-size:10px;color:var(--muted);display:block;margin-top:5px}.tag{font-size:9px;padding:5px 7px;border-radius:6px;background:#1a242c;color:#b8c6d5;white-space:nowrap}.tag.green{color:var(--green);background:#b7f36b13}.tag.amber{color:var(--amber);background:#ffd27a13}.settings-form{display:grid;gap:15px;max-width:640px}.field label{display:block;font-size:11px;font-weight:700;margin-bottom:7px}.field input,.field textarea,.field select{width:100%;border:1px solid #303b48;border-radius:9px;background:#0b1118;color:var(--text);padding:11px 12px;font-size:12px}.field .help{color:var(--muted);font-size:10px;line-height:1.55;margin-top:7px}.settings-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.notice{padding:12px 13px;border:1px solid #3a4332;background:#b7f36b0b;border-radius:10px;color:#bfd6a6;font-size:11px;line-height:1.6}.notice.warning{border-color:#5b4930;background:#ffd27a0b;color:#e3c58e}.footer-note{font-size:10px;line-height:1.6;color:#748293;margin-top:15px}.toast{position:fixed;right:22px;bottom:22px;z-index:40;background:#1a242e;border:1px solid #3b4957;border-radius:10px;padding:12px 15px;color:var(--text);font-size:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;max-width:min(360px,calc(100vw - 32px))}.toast.show{opacity:1;transform:translateY(0)}.mobile-menu{display:none}.api-status{font-size:10px;color:var(--muted);margin-top:12px}.api-status strong{color:var(--amber)}
-    @media(max-width:1120px){.app{grid-template-columns:215px minmax(0,1fr)}.main{padding:0 21px 30px}.workspace{grid-template-columns:minmax(0,1.25fr) minmax(260px,.8fr)}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.date-label{display:none}}
-    @media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:30;left:-270px;top:0;width:248px;transition:left .2s;box-shadow:var(--shadow)}.sidebar.open{left:0}.mobile-menu{display:inline-flex}.main{padding:0 16px 28px}.topbar{height:65px}.workspace{grid-template-columns:1fr}.right-col{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.right-col>.panel:last-child{grid-column:1/-1}.title-row{margin-top:24px}}
-    @media(max-width:540px){.main{padding:0 11px 24px}.topbar{height:60px}.crumb{font-size:11px}.connection{display:none}.top-actions{gap:6px}.top-actions .primary-btn{padding:9px 10px}.title-row{align-items:flex-start;margin:21px 0 17px}.title-row h1{font-size:27px}.title-row p{font-size:12px}.stats{gap:8px}.stat{padding:12px}.stat-value{font-size:24px}.stat-top{font-size:10px}.workspace{gap:12px}.right-col{grid-template-columns:1fr;gap:12px}.right-col>.panel:last-child{grid-column:auto}.chat-panel{min-height:450px}.chat-messages{padding:13px;max-height:400px}.chat-topline{padding:12px 13px}.panel-head{padding:14px}.prompt-chips{padding:0 13px 13px}.composer{padding:10px}.agent-grid{grid-template-columns:1fr}.task-row{align-items:flex-start;flex-wrap:wrap}.task-row .tag{margin-left:35px}.page-panel{padding:15px}.footer-note{margin-bottom:12px}}
-    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+    :root {
+      color-scheme: dark;
+      --bg: #090c11;
+      --panel: #111720;
+      --line: #28313d;
+      --text: #eef3f8;
+      --muted: #8f9cac;
+      --green: #b7f36b;
+      --blue: #8bbcff;
+      --red: #ff9292;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% -20%, #203329, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+    }
+
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      max-width: 1100px;
+      min-height: 100vh;
+      margin: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--green);
+      color: #11180b;
+      font-weight: 900;
+    }
+
+    .brand strong { display: block; font-size: 15px; }
+    .brand small { color: var(--muted); font-size: 10px; letter-spacing: 1.5px; }
+
+    .status {
+      color: var(--muted);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      background: #e5b75e;
+      border-radius: 50%;
+    }
+
+    .dot.online { background: var(--green); }
+
+    .heading { padding: 26px 0 18px; }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 10px;
+      letter-spacing: 2px;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: clamp(25px, 4vw, 36px);
+      margin: 9px 0;
+      letter-spacing: -1px;
+    }
+
+    .heading p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .chat {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 450px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #0e131af2;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 17px;
+      border-bottom: 1px solid var(--line);
+      gap: 12px;
+    }
+
+    .chat-header strong { font-size: 12px; }
+    .chat-header small { display: block; color: var(--muted); margin-top: 4px; font-size: 10px; }
+
+    .badge {
+      color: var(--green);
+      border: 1px solid #b7f36b44;
+      border-radius: 20px;
+      padding: 5px 8px;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    #messages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      min-height: 250px;
+      max-height: 58vh;
+    }
+
+    .message {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .message.user { flex-direction: row-reverse; }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      flex: 0 0 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: #b7f36b18;
+      border: 1px solid #b7f36b33;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .user .avatar {
+      background: #8bbcff16;
+      border-color: #8bbcff33;
+      color: var(--blue);
+    }
+
+    .bubble {
+      max-width: min(85%, 700px);
+      background: #171f29;
+      border: 1px solid #293442;
+      border-radius: 4px 13px 13px 13px;
+      padding: 11px 13px;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .user .bubble {
+      background: #b7f36b10;
+      border-color: #b7f36b30;
+      border-radius: 13px 4px 13px 13px;
+    }
+
+    .who {
+      font-size: 10px;
+      color: var(--green);
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .user .who { color: var(--blue); }
+
+    .composer {
+      padding: 13px;
+      border-top: 1px solid var(--line);
+      background: #0b1016;
+    }
+
+    #chatForm {
+      border: 1px solid #34404d;
+      background: #111821;
+      border-radius: 12px;
+      padding: 11px;
+    }
+
+    #chatInput {
+      display: block;
+      width: 100%;
+      min-height: 65px;
+      max-height: 180px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    #chatInput::placeholder { color: #738194; }
+
+    .composer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 9px;
+    }
+
+    .hint { color: var(--muted); font-size: 10px; }
+
+    button.primary {
+      border: 1px solid #ccff91;
+      border-radius: 9px;
+      padding: 10px 15px;
+      background: var(--green);
+      color: #11180b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    button.secondary {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px 12px;
+      background: #111720;
+      color: var(--text);
+      font-size: 11px;
+    }
+
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .quick-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 18px 14px;
+    }
+
+    .quick-prompts button {
+      background: #101721;
+      color: #b5c2d0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+
+    footer {
+      color: #718093;
+      font-size: 10px;
+      line-height: 1.6;
+      padding: 14px 0;
+    }
+
+    @media (max-width: 600px) {
+      .app { padding: 12px; }
+      .heading { padding: 21px 0 15px; }
+      #messages { padding: 13px; max-height: 55vh; }
+      .bubble { max-width: 90%; font-size: 12px; }
+      .status { font-size: 10px; }
+      .hint { max-width: 65%; }
+    }
   </style>
 </head>
+
 <body>
-<div class="app">
-  <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
-    <div class="brand"><div class="brandmark">TS</div><div><div class="brand-name">TruckSafe AI</div><div class="brand-sub">COMMAND CENTER</div></div></div>
-    <div>
-      <div class="workspace-label">Workspace</div>
-      <nav class="nav" aria-label="Seções">
-        <button class="active" data-view="overview"><span class="ico">◈</span> Visão geral</button>
-        <button data-view="agents"><span class="ico">⌘</span> Agentes</button>
-        <button data-view="tasks"><span class="ico">▤</span> Tarefas <span class="count" id="taskNavCount">03</span></button>
-        <button data-view="approvals"><span class="ico">⛨</span> Aprovações <span class="count" id="approvalNavCount">01</span></button>
-        <button data-view="activity"><span class="ico">↻</span> Atividade</button>
-      </nav>
-    </div>
-    <div>
-      <div class="workspace-label">Sistema</div>
-      <nav class="nav"><button data-view="settings"><span class="ico">⚙</span> Configurações</button></nav>
-    </div>
-    <div class="side-bottom">
-      <div class="project-card"><div class="project-heading"><span class="project-dot"></span> Projeto TruckSafe</div><p>Central experimental de desenvolvimento com supervisão humana.</p><div class="project-meta">MODO DEMONSTRAÇÃO · v0.1.0</div></div>
-      <div class="user-row"><div class="avatar">TS</div><div class="user-info"><strong>Operador</strong><small>Controle do projeto</small></div><button class="more" title="Abrir configurações" data-go-settings>···</button></div>
-    </div>
-  </aside>
-  <main class="main">
-    <header class="topbar">
-      <div style="display:flex;align-items:center;gap:12px"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="Abrir menu">☰</button><div class="crumb">TruckSafe <span style="color:#526070">/</span> <strong id="crumbTitle">Visão geral</strong></div></div>
-      <div class="top-actions"><div class="connection" id="connectionBadge"><i></i><span id="connectionText">Backend não conectado</span></div><button class="icon-btn" title="Configurações" data-go-settings>⚙</button><button class="primary-btn" id="newTaskTop">＋ Nova tarefa</button></div>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">TS</div>
+        <div>
+          <strong>TruckSafe AI</strong>
+          <small>COMMAND CENTER</small>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">Conectando ao backend...</span>
+      </div>
     </header>
 
-    <section id="view-overview" class="view active">
-      <div class="title-row"><div><div class="eyebrow">CENTRAL DE COMANDO · TRUCKSAFE</div><h1>Seu time. Uma conversa.</h1><p>Delegue tarefas, acompanhe os agentes e mantenha a decisão final nas suas mãos.</p></div><div class="date-label" id="todayLabel">SESSÃO LOCAL</div></div>
-      <div class="stats">
-        <div class="stat"><div class="stat-top"><span>Agentes disponíveis</span><span class="stat-icon">⌘</span></div><div class="stat-value">04</div><div class="stat-note"><span class="good">●</span> Prontos para receber tarefas</div></div>
-        <div class="stat"><div class="stat-top"><span>Tarefas nesta sessão</span><span class="stat-icon">▤</span></div><div class="stat-value" id="statTasks">03</div><div class="stat-note">Inclui exemplos de demonstração</div></div>
-        <div class="stat"><div class="stat-top"><span>Aguardando aprovação</span><span class="stat-icon">⛨</span></div><div class="stat-value" id="statApprovals">01</div><div class="stat-note">Nenhuma mudança será aplicada sozinha</div></div>
-        <div class="stat"><div class="stat-top"><span>Execuções reais</span><span class="stat-icon">↗</span></div><div class="stat-value" id="statReal">00</div><div class="stat-note">Conecte o backend para ativar a IA</div></div>
-      </div>
-      <div class="workspace">
-        <div class="left-col">
-          <section class="panel chat-panel">
-            <div class="chat-topline"><div class="coordinator"><div class="agent-avatar">✳</div><div><strong>Coordenador TruckSafe</strong><small id="coordinatorSub">Orquestra o time e organiza o plano</small></div></div><span class="online-pill" id="modePill">DEMO</span></div>
-            <div class="chat-messages" id="chatMessages" aria-live="polite">
-              <div class="message"><div class="agent-avatar">✳</div><div class="bubble"><div class="who">COORDENADOR</div><p>Central online. Posso organizar uma investigação, dividir o trabalho entre agentes e preparar um plano de execução.<br><br>Comece com uma tarefa real do TruckSafe. Neste momento estou em modo demonstração, então não vou fingir que examinei seu código.</p></div></div>
-            </div>
-            <div class="prompt-chips"><button class="chip" data-prompt="Investigue por que o mapa offline fica vazio quando aumento o zoom.">⌖ Investigar mapa offline</button><button class="chip" data-prompt="Faça uma auditoria inicial da estrutura do projeto TruckSafe e liste riscos técnicos.">⌘ Auditar o projeto</button><button class="chip" data-prompt="Planeje testes para verificar se a navegação offline funciona sem internet.">✓ Planejar testes offline</button></div>
-            <form class="composer" id="chatForm"><div class="composer-wrap"><textarea id="chatInput" rows="2" placeholder="Descreva o que precisa ser feito no TruckSafe…" aria-label="Descreva a tarefa"></textarea><div class="composer-tools"><span class="composer-hint">Enter para enviar · Shift + Enter para quebrar linha</span><button type="submit" class="primary-btn send-btn" id="sendBtn">Enviar <span>↑</span></button></div></div></form>
-          </section>
-          <section class="panel"><div class="panel-head"><div class="panel-title">Fluxo da tarefa <span>· exemplo</span></div><button class="small-btn" data-go-tasks>Ver tarefas</button></div><div class="flow-steps" id="workflowSteps">
-            <div class="flow-step done"><div class="step-icon">✓</div><div class="step-body"><strong>Coordenador recebe o pedido</strong><small>Define objetivo, escopo e critérios de sucesso.</small></div><span class="step-status">Exemplo</span></div>
-            <div class="flow-step active"><div class="step-icon">⌕</div><div class="step-body"><strong>Especialistas investigam</strong><small>Mapa, armazenamento offline e navegação analisados em paralelo.</small></div><span class="step-status">Próximo</span></div>
-            <div class="flow-step"><div class="step-icon">✓</div><div class="step-body"><strong>QA prepara os testes</strong><small>Reprodução, regressão e critérios de aceite.</small></div><span class="step-status">Pendente</span></div>
-            <div class="flow-step"><div class="step-icon">⛨</div><div class="step-body"><strong>Você aprova a mudança</strong><small>Sem merge, exclusões ou publicação sem autorização.</small></div><span class="step-status">Obrigatório</span></div>
-          </div></section>
-        </div>
-        <div class="right-col">
-          <section class="panel"><div class="panel-head"><div class="panel-title">Agentes <span>· 4 funções</span></div><button class="small-btn" data-go-agents>Detalhes</button></div><div class="agent-list">
-            <div class="agent-row"><div class="agent-icon">✳</div><div><div class="agent-name">Coordenador</div><div class="agent-desc">Planeja e distribui tarefas</div></div><div class="agent-meta"><div class="agent-state ready"><span class="status-dot" style="background:var(--green)"></span>Pronto</div></div></div>
-            <div class="agent-row"><div class="agent-icon">⌖</div><div><div class="agent-name">Especialista de Mapas</div><div class="agent-desc">Tiles, zoom, cache e rotas</div></div><div class="agent-meta"><div class="agent-state ready"><span class="status-dot" style="background:var(--green)"></span>Pronto</div></div></div>
-            <div class="agent-row"><div class="agent-icon">⌘</div><div><div class="agent-name">Engenheiro de Código</div><div class="agent-desc">Investiga e propõe correções</div></div><div class="agent-meta"><div class="agent-state ready"><span class="status-dot" style="background:var(--green)"></span>Pronto</div></div></div>
-            <div class="agent-row"><div class="agent-icon">✓</div><div><div class="agent-name">QA / Testes</div><div class="agent-desc">Valida e procura regressões</div></div><div class="agent-meta"><div class="agent-state ready"><span class="status-dot" style="background:var(--green)"></span>Pronto</div></div></div>
-          </div></section>
-          <section class="panel"><div class="panel-head"><div class="panel-title">Fila de aprovação</div><button class="small-btn" data-go-approvals>Ver fila</button></div><div class="approval-list" id="approvalPreview"><div class="approval" data-approval="demo-1"><div class="approval-top"><span class="warn">⚑</span> DECISÃO NECESSÁRIA</div><h4>Conectar o repositório do TruckSafe</h4><p>Para inspecionar arquivos reais, escolha uma integração do GitHub ou forneça os arquivos relevantes. Nenhum repositório está conectado nesta versão.</p><div class="approval-actions"><button class="approve" data-go-settings>Configurar acesso</button><button class="reject" data-dismiss-approval="demo-1">Agora não</button></div></div></div></section>
-          <section class="panel"><div class="panel-head"><div class="panel-title">Atividade recente</div><button class="small-btn" data-go-activity>Ver tudo</button></div><div class="activity-list" id="activityPreview"><div class="activity"><div class="activity-mark">↗</div><div><div class="activity-text"><strong>Central inicializada</strong> — sessão local criada.</div><div class="activity-time">AGORA · MODO DEMONSTRAÇÃO</div></div></div><div class="activity"><div class="activity-mark">⛨</div><div><div class="activity-text"><strong>Proteção ativa</strong> — ações críticas exigem aprovação.</div><div class="activity-time">POLÍTICA DO WORKSPACE</div></div></div></div></section>
-        </div>
-      </div>
-      <div class="footer-note">Protótipo v0.1 · Os dados da demonstração ficam no navegador. Nenhum agente teve acesso aos arquivos locais do TruckSafe. Configure um backend para habilitar chamadas reais.</div>
+    <section class="heading">
+      <div class="eyebrow">ASSISTENTE INTELIGENTE</div>
+      <h1>O que você quer saber?</h1>
+      <p>
+        Converse normalmente com o Gemini. Faça perguntas gerais,
+        peça explicações ou discuta o desenvolvimento do TruckSafe.
+        O acesso ao repositório não é necessário para conversas comuns.
+      </p>
     </section>
 
-    <section id="view-agents" class="view"><div class="title-row"><div><div class="eyebrow">SUA EQUIPE VIRTUAL</div><h1>Agentes</h1><p>Cada agente tem uma função clara. O coordenador reúne os resultados em uma única conversa.</p></div></div><div class="page-panel"><div class="agent-grid">
-      <article class="agent-card"><div class="agent-icon">✳</div><h3>01 · Coordenador / Tech Lead</h3><p>Interpreta pedidos, cria o plano de trabalho, identifica dependências, divide subtarefas e consolida conclusões sem esconder incertezas.</p><span class="tag green">Orquestração</span></article>
-      <article class="agent-card"><div class="agent-icon">⌖</div><h3>02 · Especialista de Mapas</h3><p>Investiga renderização, zoom, tiles, cache, mapas baixados, comportamento offline e integração com o sistema de rotas.</p><span class="tag">Análise técnica</span></article>
-      <article class="agent-card"><div class="agent-icon">⌘</div><h3>03 · Engenheiro de Código</h3><p>Propõe alterações pequenas, explica arquivos afetados e prepara mudanças isoladas. Não deve aplicar mudanças destrutivas por conta própria.</p><span class="tag">Implementação supervisionada</span></article>
-      <article class="agent-card"><div class="agent-icon">✓</div><h3>04 · QA / Testes</h3><p>Define passos de reprodução, casos de teste, critérios de aceite e validações como análise estática e testes automatizados.</p><span class="tag">Verificação independente</span></article>
-    </div><div class="notice" style="margin-top:16px">Nesta versão, os quatro perfis são uma definição de produto. No modo demonstração, as respostas são simuladas; com backend e provedor de IA configurados, o coordenador pode fazer uma análise real do pedido, mas ainda precisará de acesso explícito ao repositório para analisar o código.</div></div></section>
+    <section class="chat">
+      <div class="chat-header">
+        <div>
+          <strong>Assistente TruckSafe</strong>
+          <small id="modelText">Gemini · verificando conexão</small>
+        </div>
+        <button class="secondary" id="newChatBtn" type="button">
+          Nova conversa
+        </button>
+      </div>
 
-    <section id="view-tasks" class="view"><div class="title-row"><div><div class="eyebrow">TRABALHO EM ANDAMENTO</div><h1>Tarefas</h1><p>Pedidos e investigações desta sessão local.</p></div><button class="primary-btn" data-go-overview>＋ Criar tarefa</button></div><div class="page-panel"><div id="taskList"><div class="task-row"><div class="agent-icon">⌖</div><div class="task-main"><strong>Investigar mapa vazio em zoom alto</strong><small>Exemplo de investigação · arquivos ainda não analisados</small></div><span class="tag amber">Planejamento</span></div><div class="task-row"><div class="agent-icon">✓</div><div class="task-main"><strong>Definir testes de navegação offline</strong><small>Exemplo de QA · aguardando acesso ao projeto</small></div><span class="tag">A planejar</span></div><div class="task-row"><div class="agent-icon">⌘</div><div class="task-main"><strong>Preparar auditoria técnica</strong><small>Exemplo de tarefa · escopo a confirmar</small></div><span class="tag">A planejar</span></div></div></div></section>
+      <div id="messages" aria-live="polite">
+        <div class="message">
+          <div class="avatar">AI</div>
+          <div class="bubble">
+            <div class="who">GEMINI</div>
+            Olá! Estou pronto para conversar. Pode perguntar, por exemplo:
+            qual é a cor do céu, como funciona um motor ou como melhorar
+            seu projeto TruckSafe.
+          </div>
+        </div>
+      </div>
 
-    <section id="view-approvals" class="view"><div class="title-row"><div><div class="eyebrow">CONTROLE HUMANO</div><h1>Aprovações</h1><p>Ações sensíveis ficam paradas até você decidir.</p></div></div><div class="page-panel"><div class="notice warning">Regra padrão: analisar e propor pode ser automático; alterar dependências, editar arquivos importantes, fazer merge, apagar dados ou publicar exige autorização conforme a política configurada.</div><div id="approvalFullList" style="margin-top:12px"><div class="approval" data-approval="demo-1"><div class="approval-top"><span class="warn">⚑</span> ACESSO PENDENTE</div><h4>Conectar o repositório do TruckSafe</h4><p>O sistema precisa receber arquivos ou de uma integração de repositório para revisar código real. Nenhuma conexão está ativa neste momento.</p><div class="approval-actions"><button class="approve" data-go-settings>Configurar acesso</button><button class="reject" data-dismiss-approval="demo-1">Adiar</button></div></div></div></div></section>
+      <div class="quick-prompts">
+        <button type="button" data-prompt="Qual é a cor do céu?">
+          Qual é a cor do céu?
+        </button>
+        <button type="button" data-prompt="Explique como funciona a IA generativa.">
+          Como funciona a IA?
+        </button>
+        <button type="button" data-prompt="Me ajude a planejar o próximo passo do TruckSafe.">
+          Planejar o TruckSafe
+        </button>
+      </div>
 
-    <section id="view-activity" class="view"><div class="title-row"><div><div class="eyebrow">REGISTRO DA SESSÃO</div><h1>Atividade</h1><p>Eventos do navegador e decisões tomadas nesta central.</p></div><button class="small-btn" id="clearActivity">Limpar registro local</button></div><div class="page-panel"><div id="activityFullList" class="activity-list"><div class="empty">As novas ações aparecerão aqui.</div></div></div></section>
+      <div class="composer">
+        <form id="chatForm">
+          <textarea
+            id="chatInput"
+            placeholder="Digite sua mensagem..."
+            aria-label="Sua mensagem"
+            required
+          ></textarea>
 
-    <section id="view-settings" class="view"><div class="title-row"><div><div class="eyebrow">CONFIGURAÇÃO DO WORKSPACE</div><h1>Conexões</h1><p>Prepare o próximo passo sem expor chaves secretas no navegador.</p></div></div><div class="page-panel"><h2>Backend da central</h2><p>A interface pode rodar como arquivo HTML, mas chamadas reais de IA precisam passar por um backend. O pacote inicial inclui um servidor Node.js local.</p><form class="settings-form" id="settingsForm"><div class="field"><label for="backendUrl">URL do backend</label><input id="backendUrl" type="url" placeholder="http://localhost:3000" value="http://localhost:3000"><div class="help">Endereço do servidor que executa chamadas de IA e aplica as regras de acesso. Para uma instalação local, use a porta 3000.</div></div><div class="settings-actions"><button class="primary-btn" type="button" id="testConnection">Testar conexão</button><button class="small-btn" type="submit">Salvar endereço</button></div><div class="api-status" id="apiStatus">Status: <strong>não testado</strong></div></form>
-      <div style="height:1px;background:var(--line);margin:25px 0"></div><h2>Provedor de IA</h2><p>Configure as credenciais somente no servidor, nunca no HTML.</p><div class="notice">Para ativar respostas reais no pacote local: copie <code>.env.example</code> para <code>.env</code>, preencha <code>GEMINI_API_KEY</code> e inicie o servidor. A chave será lida apenas pelo Node.js. O modelo pode ser definido em <code>GEMINI_MODEL</code>.</div>
-      <div style="height:1px;background:var(--line);margin:25px 0"></div><h2>Acesso ao código do TruckSafe</h2><p>Sem arquivos ou integração autorizada, os agentes conseguem planejar a investigação, mas não confirmar a causa de um bug nem editar o projeto.</p><div class="field"><label>Integração de repositório</label><input value="Ainda não conectado" disabled><div class="help">Próxima etapa: conectar um repositório privado com permissões mínimas ou importar os arquivos relevantes. O acesso de escrita deve continuar bloqueado por padrão.</div></div>
-      <div style="height:1px;background:var(--line);margin:25px 0"></div><h2>Política de aprovação</h2><p>Configuração inicial do controle humano.</p><div class="settings-form"><label class="field"><span style="font-size:11px;font-weight:700">Ações que sempre exigem aprovação</span><div class="help">• Merge para branch principal<br>• Publicação / deploy<br>• Exclusão de arquivos, dados ou ambientes<br>• Novas dependências ou alterações de arquitetura<br>• Uso de credenciais e serviços pagos</div></label><div class="notice warning">Não use esta central com chaves de API no código do navegador. Não execute código gerado por IA diretamente no seu computador ou servidor de produção.</div></div>
-    </div></section>
+          <div class="composer-bottom">
+            <span class="hint">Enter para enviar · Shift + Enter para nova linha</span>
+            <button class="primary" id="sendBtn" type="submit">
+              Enviar ↑
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      TruckSafe AI Command Center · As respostas são geradas pelo Gemini.
+      A conexão com o repositório é opcional e não é usada neste chat.
+    </footer>
   </main>
-</div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-(()=>{
-  const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
-  const state={view:'overview',backend:localStorage.getItem('ts_backend_url')||'http://localhost:3000',connected:false,apiConfigured:false,realRuns:0,tasks:3,approvals:1,taskItems:[],activity:[],busy:false};
-  const safe=(s)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const toast=(msg)=>{const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),3000)};
-  const now=()=>new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  function addActivity(title,detail=''){state.activity.unshift({title,detail,time:now()});renderActivity()}
-  function renderActivity(){const html=state.activity.length?state.activity.map(a=>`<div class="activity"><div class="activity-mark">↗</div><div><div class="activity-text"><strong>${safe(a.title)}</strong>${a.detail?' — '+safe(a.detail):''}</div><div class="activity-time">${safe(a.time)} · SESSÃO LOCAL</div></div></div>`).join(''):'<div class="empty">Nenhum evento registrado.</div>';$('#activityPreview').innerHTML=html.slice(0,2);$('#activityFullList').innerHTML=html}
-  function setView(view){state.view=view;$$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+view));$$('.nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));const names={overview:'Visão geral',agents:'Agentes',tasks:'Tarefas',approvals:'Aprovações',activity:'Atividade',settings:'Configurações'};$('#crumbTitle').textContent=names[view]||'Visão geral';$('#sidebar').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'})}
-  function updateStats(){$('#statTasks').textContent=String(state.tasks).padStart(2,'0');$('#statApprovals').textContent=String(state.approvals).padStart(2,'0');$('#statReal').textContent=String(state.realRuns).padStart(2,'0');$('#taskNavCount').textContent=String(state.tasks).padStart(2,'0');$('#approvalNavCount').textContent=String(state.approvals).padStart(2,'0')}
-  function updateConnection(connected,configured=false){state.connected=connected;state.apiConfigured=configured;$('#connectionBadge').classList.toggle('connected',connected);$('#connectionText').textContent=connected?(configured?'Backend + IA conectados':'Backend conectado · IA não configurada'):'Backend não conectado';$('#modePill').textContent=connected&&configured?'IA ATIVA':'DEMO';$('#coordinatorSub').textContent=connected&&configured?'Respostas processadas pelo backend configurado':'Orquestra o time e organiza o plano';if(connected&&configured)$('#modePill').style.color='var(--green)';else $('#modePill').style.color='var(--amber)'}
-  function appendMessage(role,content, label){const node=document.createElement('div');node.className='message '+(role==='user'?'user':'');const avatar=role==='user'?'<div class="avatar">TS</div>':'<div class="agent-avatar">✳</div>';node.innerHTML=avatar+`<div class="bubble"><div class="who">${safe(label|| (role==='user'?'VOCÊ':'COORDENADOR'))}</div><div>${safe(content).replace(/\n/g,'<br>')}</div></div>`;$('#chatMessages').appendChild(node);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}
-  function demoAnswer(task){const t=task.toLowerCase();let specific='';if(t.includes('mapa')||t.includes('zoom')||t.includes('offline'))specific='Investigação sugerida para o mapa offline:\n1. Rastrear de onde vêm os tiles em zoom alto e confirmar se existem no armazenamento local.\n2. Conferir limites de zoom, endereço/chave dos tiles e estratégia de cache.\n3. Verificar se o widget ainda tenta buscar tiles remotos quando a conexão cai.\n4. Comparar o caminho usado para salvar os dados com o caminho usado para renderizá-los.\n5. Reproduzir em modo avião, após reiniciar o app e dentro/fora da área baixada.';else specific='Plano inicial:\n1. Delimitar o comportamento esperado e como reproduzir o problema.\n2. Identificar os arquivos, serviços e dependências envolvidos.\n3. Separar hipóteses de fatos confirmados.\n4. Definir testes de regressão antes de propor uma alteração.\n5. Entregar relatório e aguardar aprovação para mudanças de risco.';return 'Recebi a tarefa: “'+task+'”\n\n'+specific+'\n\nAinda não é um diagnóstico: estou em modo demonstração e não li arquivos do projeto. Próximo passo para uma análise real: conectar um backend com IA e disponibilizar o repositório/arquivos relevantes. Nenhuma alteração foi feita.'}
-  async function submitTask(task){task=task.trim();if(!task||state.busy)return;appendMessage('user',task,'VOCÊ');$('#chatInput').value='';state.tasks++;state.taskItems.unshift({title:task,detail:'Criada '+now(),status:'Planejamento'});updateStats();renderTasks();addActivity('Nova tarefa criada',task);state.busy=true;$('#sendBtn').disabled=true;$('#sendBtn').innerHTML='Analisando…';appendMessage('assistant','Distribuindo a tarefa e preparando o plano…','COORDENADOR');const loading=$('#chatMessages').lastElementChild;
-    try{if(state.connected&&state.apiConfigured){const r=await fetch(state.backend.replace(/\/$/,'')+'/api/task',{method:'POST',headers:{'Content-Type':'application/json'},
-body: JSON.stringify({
-  task,
-  project: "TruckSafe",
-  context: "Central em fase inicial. Não alegue que analisou arquivos sem acesso real.",
-  history: (() => {
-    const messages = Array.from(
-      document.querySelectorAll("#chatMessages .message")
-    );
 
-    return messages
-      .slice(0, -2)
-      .slice(-20)
-      .map(node => {
-        const who = node.querySelector(".who")?.textContent || "";
-        const text = node.querySelector(".bubble")?.innerText || "";
+  <script>
+    (() => {
+      const $ = selector => document.querySelector(selector);
 
-        return {
-          role: who.includes("VOCÊ") ? "user" : "model",
-          text: text.replace(who, "").trim().slice(0, 4000)
-        };
-      })
-      .filter(item => item.text);
-  })()
-})
-                                                                                                                 });const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'O backend recusou a tarefa.');loading.remove();appendMessage('assistant',data.answer||JSON.stringify(data,null,2),'COORDENADOR · IA');state.realRuns++;addActivity('Análise real concluída','Resposta recebida do backend de IA.');updateStats()}else{await new Promise(r=>setTimeout(r,700));loading.remove();appendMessage('assistant',demoAnswer(task),'COORDENADOR · DEMO');addActivity('Plano demonstrativo gerado','Nenhuma chamada de IA foi realizada.');toast('Plano de demonstração criado. Nenhuma IA foi chamada.')}}catch(err){loading.remove();appendMessage('assistant','Não consegui concluir a chamada ao backend.\n\nMotivo: '+err.message+'\n\nConfira se o servidor está ativo, se o endereço está correto e se a chave de IA foi configurada no servidor.','ERRO DE CONEXÃO');addActivity('Falha na tarefa',err.message);toast('Falha ao contactar o backend.')}finally{state.busy=false;$('#sendBtn').disabled=false;$('#sendBtn').innerHTML='Enviar <span>↑</span>';$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}}
-  function renderTasks(){const defaults=[{title:'Investigar mapa vazio em zoom alto',detail:'Exemplo de investigação · arquivos ainda não analisados',status:'Planejamento'},{title:'Definir testes de navegação offline',detail:'Exemplo de QA · aguardando acesso ao projeto',status:'A planejar'},{title:'Preparar auditoria técnica',detail:'Exemplo de tarefa · escopo a confirmar',status:'A planejar'}];const all=[...state.taskItems,...defaults];$('#taskList').innerHTML=all.map(t=>`<div class="task-row"><div class="agent-icon">▤</div><div class="task-main"><strong>${safe(t.title)}</strong><small>${safe(t.detail||'Nova tarefa desta sessão')}</small></div><span class="tag ${t.status==='Planejamento'?'amber':'green'}">${safe(t.status||'Nova')}</span></div>`).join('')}
-  function dismissApproval(id){$$(`[data-approval="${id}"]`).forEach(el=>el.remove());$$(`[data-dismiss-approval="${id}"]`).forEach(el=>el.closest('.approval')?.remove());if(id==='demo-1')state.approvals=Math.max(0,state.approvals-1);updateStats();addActivity('Aprovação adiada','A conexão do repositório continua pendente.');toast('Decisão registrada nesta sessão. Nenhuma conexão foi alterada.')}
-  async function testConnection(){const url=$('#backendUrl').value.trim().replace(/\/$/,'');const status=$('#apiStatus');if(!url){status.innerHTML='Status: <strong>informe a URL</strong>';return}status.innerHTML='Status: <strong>testando conexão…</strong>';try{const r=await fetch(url+'/api/health',{method:'GET'});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();updateConnection(true,!!data.apiConfigured);status.innerHTML='Status: <strong style="color:var(--green)">conectado</strong> · '+(data.apiConfigured?'IA configurada no servidor':'servidor ativo, mas a chave de IA não foi configurada');toast('Conexão verificada.')}catch(e){updateConnection(false,false);status.innerHTML='Status: <strong style="color:var(--red)">não foi possível conectar</strong> · '+safe(e.message);toast('Backend indisponível. Inicie o servidor Node.js.')}}
-  $$('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));$$('[data-go-settings]').forEach(b=>b.addEventListener('click',()=>setView('settings')));$$('[data-go-tasks]').forEach(b=>b.addEventListener('click',()=>setView('tasks')));$$('[data-go-agents]').forEach(b=>b.addEventListener('click',()=>setView('agents')));$$('[data-go-approvals]').forEach(b=>b.addEventListener('click',()=>setView('approvals')));$$('[data-go-activity]').forEach(b=>b.addEventListener('click',()=>setView('activity')));$$('[data-go-overview]').forEach(b=>b.addEventListener('click',()=>{setView('overview');$('#chatInput').focus()}));
-  $('#mobileMenu').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));$$('[data-prompt]').forEach(b=>b.addEventListener('click',()=>{setView('overview');$('#chatInput').value=b.dataset.prompt;$('#chatInput').focus()}));$('#newTaskTop').addEventListener('click',()=>{setView('overview');$('#chatInput').focus()});$('#chatForm').addEventListener('submit',e=>{e.preventDefault();submitTask($('#chatInput').value)});$('#chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('#chatForm').requestSubmit()}});$$('[data-dismiss-approval]').forEach(b=>b.addEventListener('click',()=>dismissApproval(b.dataset.dismissApproval)));
-  $('#settingsForm').addEventListener('submit',e=>{e.preventDefault();state.backend=$('#backendUrl').value.trim().replace(/\/$/,'');localStorage.setItem('ts_backend_url',state.backend);toast('Endereço do backend salvo neste navegador.');addActivity('Configuração alterada','URL do backend salva localmente.');});$('#testConnection').addEventListener('click',async()=>{state.backend=$('#backendUrl').value.trim().replace(/\/$/,'');localStorage.setItem('ts_backend_url',state.backend);await testConnection()});$('#clearActivity').addEventListener('click',()=>{state.activity=[];renderActivity();toast('Registro local limpo.')});
-  $('#backendUrl').value=state.backend;$('#todayLabel').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}).toUpperCase();renderActivity();renderTasks();updateStats();
-  // Detecta silenciosamente backend local; não realiza chamadas de IA durante a inicialização.
-  fetch(state.backend.replace(/\/$/,'')+'/api/health').then(r=>r.ok?r.json():Promise.reject()).then(d=>updateConnection(true,!!d.apiConfigured)).catch(()=>updateConnection(false,false));
-})();
-</script>
-<script src="sessions-addon.js"></script>
+      const state = {
+        backend: '',
+        busy: false,
+        history: []
+      };
+
+      const messages = $('#messages');
+      const input = $('#chatInput');
+      const sendBtn = $('#sendBtn');
+
+      function setStatus(online, text) {
+        $('#statusDot').classList.toggle('online', online);
+        $('#statusText').textContent = text;
+      }
+
+      function appendMessage(role, text, label) {
+        const row = document.createElement('div');
+        row.className = 'message' + (role === 'user' ? ' user' : '');
+
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = role === 'user' ? 'EU' : 'AI';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        const who = document.createElement('div');
+        who.className = 'who';
+        who.textContent = label || (role === 'user' ? 'VOCÊ' : 'GEMINI');
+
+        const content = document.createElement('div');
+        content.textContent = text;
+
+        bubble.append(who, content);
+        row.append(avatar, bubble);
+        messages.append(row);
+        messages.scrollTop = messages.scrollHeight;
+
+        return row;
+      }
+
+      async function checkBackend() {
+        state.backend = window.location.origin;
+
+        try {
+          const response = await fetch(
+            state.backend + '/api/health',
+            { cache: 'no-store' }
+          );
+
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+
+          const data = await response.json();
+
+          if (!data.apiConfigured) {
+            setStatus(false, 'Chave Gemini não configurada');
+            $('#modelText').textContent = 'Configure GEMINI_API_KEY no servidor';
+            return;
+          }
+
+          setStatus(true, 'Backend e Gemini conectados');
+          $('#modelText').textContent = 'Gemini · ' + (data.model || 'modelo padrão');
+        } catch (error) {
+          setStatus(false, 'Backend indisponível');
+          $('#modelText').textContent = 'Não foi possível verificar o backend';
+        }
+      }
+
+      async function sendMessage(text) {
+        text = text.trim();
+
+        if (!text || state.busy) return;
+
+        appendMessage('user', text, 'VOCÊ');
+
+        const historyToSend = state.history.slice(-20);
+
+        state.history.push({ role: 'user', text });
+
+        input.value = '';
+        state.busy = true;
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Consultando...';
+
+        const loading = appendMessage(
+          'model',
+          'Aguardando resposta do Gemini...',
+          'GEMINI'
+        );
+
+        try {
+          const response = await fetch(
+            state.backend + '/api/chat',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                message: text,
+                history: historyToSend
+              })
+            }
+          );
+
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(
+              data.error || 'Erro HTTP ' + response.status
+            );
+          }
+
+          if (!data.answer || typeof data.answer !== 'string') {
+            throw new Error('O Gemini retornou uma resposta vazia.');
+          }
+
+          loading.remove();
+          appendMessage('model', data.answer, 'GEMINI');
+
+          state.history.push({
+            role: 'model',
+            text: data.answer
+          });
+
+          setStatus(true, 'Gemini conectado');
+          $('#modelText').textContent = 'Gemini · ' + (data.model || 'IA');
+
+        } catch (error) {
+          loading.remove();
+
+          appendMessage(
+            'model',
+            'Não consegui obter uma resposta da API.\n\n' +
+            'Detalhes: ' + error.message +
+            '\n\nConfira se o servidor está ativo, se a chave está ' +
+            'configurada e se o backend consegue acessar a API do Gemini.',
+            'ERRO'
+          );
+
+          // Remove a mensagem atual do histórico se a chamada falhar.
+          state.history.pop();
+
+          setStatus(false, 'Falha na chamada ao Gemini');
+        } finally {
+          state.busy = false;
+          sendBtn.disabled = false;
+          sendBtn.textContent = 'Enviar ↑';
+          input.focus();
+        }
+      }
+
+      $('#chatForm').addEventListener('submit', event => {
+        event.preventDefault();
+        sendMessage(input.value);
+      });
+
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          $('#chatForm').requestSubmit();
+        }
+      });
+
+      document.querySelectorAll('[data-prompt]').forEach(button => {
+        button.addEventListener('click', () => {
+          input.value = button.dataset.prompt;
+          input.focus();
+        });
+      });
+
+      $('#newChatBtn').addEventListener('click', () => {
+        if (state.busy) return;
+
+        state.history = [];
+        messages.replaceChildren();
+
+        appendMessage(
+          'model',
+          'Nova conversa iniciada. O que você gostaria de saber?',
+          'GEMINI'
+        );
+
+        input.focus();
+      });
+
+      checkBackend();
+    })();
+  </script>
 </body>
 </html>
