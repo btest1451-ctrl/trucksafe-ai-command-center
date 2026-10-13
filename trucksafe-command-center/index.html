@@ -131,5 +131,6 @@
   fetch(state.backend.replace(/\/$/,'')+'/api/health').then(r=>r.ok?r.json():Promise.reject()).then(d=>updateConnection(true,!!d.apiConfigured)).catch(()=>updateConnection(false,false));
 })();
 </script>
+<script src="sessions-addon.js"></script>
 </body>
 </html>
