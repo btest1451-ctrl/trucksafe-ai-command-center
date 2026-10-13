@@ -1,35 +1,67 @@
-# TruckSafe AI Command — v0.1
 
-Primeira versão da central multiagente do TruckSafe. Interface em HTML/CSS/JS sem bibliotecas externas e backend inicial em Node.js.
+# TruckSafe AI Command — v0.3
 
-## O que funciona nesta versão
+Central de planejamento técnico do TruckSafe, com interface web e backend Node.js integrado ao Google Gemini.
+
+## Funcionalidades atuais
 
 - Interface responsiva para celular e computador.
-- Chat com modo demonstração explícito.
-- Seções de agentes, tarefas, aprovações, atividade e configurações.
-- URL de backend configurável e teste de `/api/health`.
-- Backend com endpoint `/api/task` que usa a OpenAI Responses API para criar um plano real quando uma chave está configurada.
-- Chave de API lida somente no servidor via `.env`, nunca exposta no HTML.
+- Chat com modo de demonstração.
+- Planejamento de tarefas com o Gemini.
+- Seções de agentes, tarefas, aprovações e atividade.
+- Verificação de conexão com o backend.
+- Chave de API mantida no servidor.
 
-## O que ainda não está implementado
+## Limitações atuais
 
-- Conexão com o repositório GitHub ou acesso automático ao seu computador.
-- Leitura/edição de arquivos do projeto TruckSafe.
-- Execução isolada de código ou testes Flutter.
-- Agentes independentes executando em paralelo. Nesta versão, os agentes são funções definidas na interface e o backend realiza o planejamento com um modelo.
-- Aprovação persistente no servidor: os controles atuais são apenas de interface/sessão.
+- O repositório GitHub ainda não está integrado automaticamente.
+- A central não lê nem edita arquivos do projeto TruckSafe.
+- Não executa testes Flutter.
+- Os agentes ainda não executam trabalhos independentes em paralelo.
+- As aprovações não são persistidas em um banco de dados.
+- O sistema ainda não possui autenticação de usuários.
 
-## Como iniciar no computador
+## Requisitos
 
-1. Instale Node.js 18 ou mais recente.
-2. Extraia a pasta e abra um terminal dentro dela.
-3. Copie `.env.example` para `.env`.
-4. Para respostas de IA reais, adicione sua chave em `OPENAI_API_KEY` dentro do `.env`. Se deixar vazia, o servidor inicia, mas as tarefas ficam no modo demonstração/sem chamadas de IA.
-5. Execute `npm start`.
-6. Abra `http://localhost:3000` no navegador.
+- Node.js 18 ou superior.
+- Uma chave da API Gemini.
 
-A chave de API pode gerar cobrança no provedor. Configure limites de uso no painel do provedor e não envie o `.env` a terceiros.
+## Instalação
 
-## Observação sobre celular
+1. Entre na pasta `trucksafe-command-center`.
+2. Copie `.env.example` para `.env`.
+3. Abra o arquivo `.env`.
+4. Preencha `GEMINI_API_KEY` com sua chave real.
+5. Execute:
 
-O jeito mais simples de usar a interface no celular é hospedar a aplicação numa máquina/servidor acessível na mesma rede ou publicar o backend com HTTPS. Não exponha o servidor sem autenticação à internet pública. O protótipo não tem autenticação de usuário, portanto deve ser usado localmente até a camada de segurança ser implementada.
+   ```bash
+   npm start
+   ```
+
+6. Abra `http://localhost:3000`.
+
+## Variáveis de ambiente
+
+```dotenv
+GEMINI_API_KEY=sua_chave_real
+GEMINI_MODEL=gemini-2.5-flash
+PORT=3000
+```
+
+Nunca publique o arquivo `.env`, nem compartilhe sua chave de API.
+
+## Segurança
+
+Esta versão ainda não possui autenticação. Não exponha o backend publicamente sem implementar autenticação, limites de requisições e controles de acesso.
+
+Não execute código gerado por IA diretamente em produção. Alterações em arquivos, dependências e infraestrutura devem passar por revisão e aprovação humana.
+
+## Próximas etapas
+
+1. Validar o funcionamento real do Gemini.
+2. Corrigir e testar todos os fluxos da interface.
+3. Implementar autenticação e limites de uso.
+4. Integrar o GitHub com permissões mínimas.
+5. Criar execução controlada de testes.
+6. Implementar agentes independentes com registros e aprovações.
+7. 
