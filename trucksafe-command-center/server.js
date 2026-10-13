@@ -4,17 +4,15 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 
-// ======================================================
-// CONFIGURAÇÃO
-// ======================================================
-
 const ROOT = __dirname;
+const PORT = Number(process.env.PORT || 3000);
+const HOST = process.env.HOST || '0.0.0.0';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
 const MAX_BODY_SIZE = 1_000_000;
 const MAX_HISTORY_MESSAGES = 20;
-const MAX_HISTORY_TEXT = 4000;
-const MAX_PROMPT_TEXT = 8000;
+const MAX_TEXT_LENGTH = 8000;
 
-// Carrega o .env antes de ler as configurações.
 function loadEnv(file) {
   if (!fs.existsSync(file)) return;
 
@@ -23,11 +21,11 @@ function loadEnv(file) {
 
     if (!trimmed || trimmed.startsWith('#')) continue;
 
-    const index = trimmed.indexOf('=');
-    if (index < 1) continue;
+    const separator = trimmed.indexOf('=');
+    if (separator < 1) continue;
 
-    const key = trimmed.slice(0, index).trim();
-    let value = trimmed.slice(index + 1).trim();
+    const key = trimmed.slice(0, separator).trim();
+    let value = trimmed.slice(separator + 1).trim();
 
     if (
       (value.startsWith('"') && value.endsWith('"')) ||
@@ -44,27 +42,16 @@ function loadEnv(file) {
 
 loadEnv(path.join(ROOT, '.env'));
 
-const PORT = Number(process.env.PORT || 3000);
-const HOST = process.env.HOST || '127.0.0.1';
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const API_KEY = process.env.GEMINI_API_KEY || '';
+const INDEX_PATH = path.join(ROOT, 'index.html');
 
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
-  throw new Error('PORT inválida. Use uma porta entre 1 e 65535.');
+  throw new Error('PORT inválida. Use um valor entre 1 e 65535.');
 }
-
-const INDEX_PATH = path.join(ROOT, 'index.html');
-const SESSIONS_PATH = path.join(ROOT, 'sessions-addon.js');
 
 if (!fs.existsSync(INDEX_PATH)) {
-  throw new Error('Arquivo index.html não encontrado.');
+  throw new Error('index.html não encontrado na pasta do servidor.');
 }
-
-const html = fs.readFileSync(INDEX_PATH);
-
-// ======================================================
-// RESPOSTAS HTTP
-// ======================================================
 
 function send(res, status, body, contentType = 'application/json; charset=utf-8') {
   if (res.writableEnded || res.destroyed) return;
@@ -75,40 +62,36 @@ function send(res, status, body, contentType = 'application/json; charset=utf-8'
     'Cache-Control': 'no-store'
   });
 
-  if (Buffer.isBuffer(body) || typeof body === 'string') {
-    res.end(body);
-  } else {
-    res.end(JSON.stringify(body));
-  }
+  res.end(
+    Buffer.isBuffer(body) || typeof body === 'string'
+      ? body
+      : JSON.stringify(body)
+  );
 }
 
 function sendError(res, status, message) {
-  return send(res, status, { error: message });
+  send(res, status, { error: message });
 }
-
-// ======================================================
-// LEITURA SEGURA DO JSON
-// ======================================================
 
 function readJson(req) {
   return new Promise((resolve, reject) => {
     let raw = '';
-    let settled = false;
+    let finished = false;
 
     function fail(error) {
-      if (settled) return;
-      settled = true;
+      if (finished) return;
+      finished = true;
       reject(error);
     }
 
     req.on('data', chunk => {
-      if (settled) return;
+      if (finished) return;
 
       raw += chunk.toString('utf8');
 
       if (Buffer.byteLength(raw, 'utf8') > MAX_BODY_SIZE) {
         fail(Object.assign(
-          new Error('Requisição muito grande. Limite de 1 MB.'),
+          new Error('Corpo da requisição excede o limite de 1 MB.'),
           { status: 413 }
         ));
 
@@ -117,17 +100,17 @@ function readJson(req) {
     });
 
     req.on('end', () => {
-      if (settled) return;
+      if (finished) return;
 
       try {
-        const data = raw ? JSON.parse(raw) : {};
+        const body = JSON.parse(raw || '{}');
 
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
-          throw new Error('O corpo deve ser um objeto JSON.');
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+          throw new Error('O corpo precisa ser um objeto JSON.');
         }
 
-        settled = true;
-        resolve(data);
+        finished = true;
+        resolve(body);
       } catch {
         fail(Object.assign(
           new Error('JSON inválido.'),
@@ -136,153 +119,176 @@ function readJson(req) {
       }
     });
 
-    req.on('error', error => fail(error));
-    req.on('aborted', () => {
-      fail(Object.assign(
-        new Error('A requisição foi interrompida.'),
-        { status: 400 }
-      ));
-    });
+    req.on('error', fail);
   });
 }
-
-// ======================================================
-// HISTÓRICO DAS CONVERSAS
-// ======================================================
 
 function sanitizeHistory(history) {
   if (!Array.isArray(history)) return [];
 
-  const messages = history
+  const result = history
     .filter(item =>
       item &&
       (item.role === 'user' || item.role === 'model') &&
       typeof item.text === 'string' &&
-      item.text.trim().length > 0
+      item.text.trim()
     )
     .slice(-MAX_HISTORY_MESSAGES)
     .map(item => ({
       role: item.role,
       parts: [{
-        text: item.text.trim().slice(0, MAX_HISTORY_TEXT)
+        text: item.text.trim().slice(0, MAX_TEXT_LENGTH)
       }]
     }));
 
   // O histórico precisa começar com uma mensagem do usuário.
-  while (messages.length && messages[0].role !== 'user') {
-    messages.shift();
+  while (result.length && result[0].role !== 'user') {
+    result.shift();
   }
 
-  // Evita turnos consecutivos com o mesmo papel.
+  // O Gemini espera alternância entre usuário e modelo.
   const normalized = [];
 
-  for (const message of messages) {
+  for (const item of result) {
     const previous = normalized[normalized.length - 1];
 
-    if (previous && previous.role === message.role) {
-      previous.parts[0].text += '\n\n' + message.parts[0].text;
+    if (previous && previous.role === item.role) {
+      previous.parts[0].text += '\n\n' + item.parts[0].text;
       previous.parts[0].text =
-        previous.parts[0].text.slice(0, MAX_HISTORY_TEXT * 2);
+        previous.parts[0].text.slice(0, MAX_TEXT_LENGTH * 2);
     } else {
-      normalized.push(message);
+      normalized.push(item);
     }
+  }
+
+  // A última mensagem do histórico deve ser uma resposta do modelo.
+  // A mensagem atual do usuário será acrescentada em seguida.
+  while (
+    normalized.length &&
+    normalized[normalized.length - 1].role !== 'model'
+  ) {
+    normalized.pop();
   }
 
   return normalized;
 }
 
-// ======================================================
-// INTEGRAÇÃO COM GEMINI
-// ======================================================
+const systemInstructions = `
+Você é um assistente conversacional geral alimentado pelo Gemini,
+integrado ao TruckSafe AI Command.
 
-async function askModel(
-  instructions,
-  prompt,
-  maxOutputTokens = 1200,
-  history = []
-) {
+Responda em português brasileiro, de maneira clara, direta e natural.
+
+REGRAS:
+- Responda normalmente a perguntas de conhecimento geral.
+- Se perguntarem a cor do céu, responda que geralmente parece azul
+  durante o dia e explique brevemente por quê.
+- Mantenha o contexto da conversa usando o histórico fornecido.
+- Não transforme toda mensagem em uma tarefa de programação.
+- Não exija conexão com GitHub ou acesso ao repositório para
+  perguntas comuns.
+- Ajude com programação quando o usuário solicitar.
+- Se uma questão depender de arquivos que você não recebeu,
+  explique essa limitação com clareza.
+- Não diga que acessou arquivos, executou testes ou alterou código
+  quando isso não aconteceu.
+- Não solicite nem revele chaves secretas.
+`;
+
+async function askGemini(message, history = []) {
   if (!API_KEY) {
     throw Object.assign(
-      new Error(
-        'GEMINI_API_KEY não configurada. Configure a chave no arquivo .env.'
-      ),
+      new Error('GEMINI_API_KEY não configurada no arquivo .env.'),
       { status: 503 }
     );
   }
 
-  const safePrompt = String(prompt || '').trim().slice(0, MAX_PROMPT_TEXT);
+  const prompt = String(message || '').trim().slice(0, MAX_TEXT_LENGTH);
 
-  if (!safePrompt) {
+  if (!prompt) {
     throw Object.assign(
-      new Error('A mensagem está vazia.'),
+      new Error('Digite uma mensagem antes de enviar.'),
       { status: 400 }
     );
   }
 
-  const safeHistory = sanitizeHistory(history);
-
-  const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${encodeURIComponent(MODEL)}:generateContent`;
-
   const contents = [
-    ...safeHistory,
+    ...sanitizeHistory(history),
     {
       role: 'user',
-      parts: [{ text: safePrompt }]
+      parts: [{ text: prompt }]
     }
   ];
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': API_KEY
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: instructions }]
-      },
-      contents,
-      generationConfig: {
-        maxOutputTokens,
-        temperature: 0.7
-      }
-    }),
-    signal: AbortSignal.timeout(60000)
-  });
+  const endpoint =
+    'https://generativelanguage.googleapis.com/v1beta/models/' +
+    encodeURIComponent(MODEL) +
+    ':generateContent';
 
-  const result = await response.json().catch(() => ({}));
+  let response;
+
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': API_KEY
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: systemInstructions }]
+        },
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1500
+        }
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+  } catch (error) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      throw Object.assign(
+        new Error('O Gemini demorou demais para responder.'),
+        { status: 504 }
+      );
+    }
+
+    throw Object.assign(
+      new Error('Não foi possível conectar à API do Gemini: ' + error.message),
+      { status: 502 }
+    );
+  }
+
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    const detail =
-      result.error?.message ||
-      `A API Gemini retornou HTTP ${response.status}.`;
+    const detail = data.error?.message ||
+      `A API do Gemini retornou HTTP ${response.status}.`;
 
     const status =
       response.status === 400 ? 400 :
+      response.status === 429 ? 429 :
       response.status === 403 ? 502 :
       response.status === 404 ? 502 :
-      response.status === 429 ? 429 :
-      response.status === 401 ? 502 :
       502;
 
     throw Object.assign(new Error(detail), { status });
   }
 
-  const answer = (result.candidates?.[0]?.content?.parts || [])
+  const answer = (data.candidates?.[0]?.content?.parts || [])
     .filter(part => typeof part.text === 'string')
     .map(part => part.text)
     .join('\n')
     .trim();
 
   if (!answer) {
-    const reason = result.promptFeedback?.blockReason;
+    const reason = data.promptFeedback?.blockReason;
 
     throw Object.assign(
       new Error(
         reason
-          ? `O Gemini bloqueou a solicitação: ${reason}.`
+          ? `A resposta foi bloqueada pelo Gemini: ${reason}.`
           : 'O Gemini retornou uma resposta vazia.'
       ),
       { status: 502 }
@@ -292,242 +298,81 @@ async function askModel(
   return answer;
 }
 
-// ======================================================
-// INSTRUÇÕES DO COORDENADOR
-// ======================================================
-
-const coordinatorInstructions = `
-Você é o Coordenador Técnico do TruckSafe, um aplicativo Flutter
-de navegação e segurança para caminhoneiros.
-
-Responda em português brasileiro, de forma direta e técnica.
-
-Diferencie fatos confirmados de hipóteses.
-Não afirme que acessou arquivos, executou testes, corrigiu código
-ou verificou algo que não aconteceu.
-
-Ajude a transformar solicitações em planos práticos com:
-- objetivo;
-- especialistas ou agentes sugeridos;
-- arquivos que precisam ser analisados;
-- testes recomendados;
-- riscos e aprovações humanas;
-- próximo passo.
-
-Não invente resultados e nunca solicite chaves secretas.
-`;
-
-const taskInstructions = `
-Você coordena uma central de planejamento técnico para o TruckSafe.
-
-Produza um plano em português brasileiro, organizado em:
-RESUMO
-AGENTES E RESPONSABILIDADES
-ARQUIVOS A ANALISAR
-TESTES
-APROVAÇÕES
-PRÓXIMO PASSO
-
-O sistema não tem acesso automático ao repositório.
-Não confirme causas nem alegue que editou ou executou código
-sem que isso realmente tenha ocorrido.
-
-Os perfis de agentes na interface não significam que agentes
-independentes estejam executando tarefas em paralelo.
-
-Seja conciso e tecnicamente útil.
-`;
-
-// ======================================================
-// SERVIDOR E ROTAS
-// ======================================================
-
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
 
   try {
-    // --------------------------------------------------
-    // STATUS DO BACKEND
-    // --------------------------------------------------
+    if (req.method === 'GET' &&
+        (url.pathname === '/' || url.pathname === '/index.html')) {
+      return send(
+        res,
+        200,
+        fs.readFileSync(INDEX_PATH),
+        'text/html; charset=utf-8'
+      );
+    }
 
     if (req.method === 'GET' && url.pathname === '/api/health') {
       return send(res, 200, {
         ok: true,
         service: 'TruckSafe AI Command',
         provider: 'Gemini',
+        model: MODEL,
         apiConfigured: Boolean(API_KEY),
-        model: API_KEY ? MODEL : null,
-        repoConnected: false,
-        note: 'A integração com o repositório ainda não foi implementada.'
+        repoConnected: false
       });
     }
-
-    // --------------------------------------------------
-    // CHAT DO COORDENADOR
-    // --------------------------------------------------
 
     if (req.method === 'POST' && url.pathname === '/api/chat') {
       const body = await readJson(req);
-      const prompt = String(body.message || '').trim();
+      const message = String(body.message || '').trim();
 
-      if (!prompt) {
+      if (!message) {
         return sendError(res, 400, 'Escreva uma mensagem.');
       }
 
-      const history = Array.isArray(body.history)
-        ? body.history
-        : [];
-
-      const answer = await askModel(
-        coordinatorInstructions,
-        prompt,
-        1000,
-        history
+      const answer = await askGemini(
+        message,
+        Array.isArray(body.history) ? body.history : []
       );
 
       return send(res, 200, {
         answer,
         model: MODEL,
-        executed: false
+        provider: 'Gemini'
       });
     }
 
-    // --------------------------------------------------
-    // CRIAÇÃO E PLANEJAMENTO DE TAREFAS
-    // --------------------------------------------------
-
-    if (req.method === 'POST' && url.pathname === '/api/task') {
-      const body = await readJson(req);
-      const task = String(body.task || '').trim();
-
-      if (!task) {
-        return sendError(res, 400, 'A tarefa está vazia.');
-      }
-
-      const context = String(
-        body.context ||
-        'Não há repositório conectado nem arquivos disponibilizados.'
-      ).slice(0, MAX_PROMPT_TEXT);
-
-      const project = String(body.project || 'TruckSafe')
-        .slice(0, 100);
-
-      const prompt = [
-        `Projeto: ${project}`,
-        `Tarefa: ${task.slice(0, MAX_PROMPT_TEXT)}`,
-        `Contexto informado: ${context}`,
-        '',
-        'Crie o plano solicitado. Não diga que executou a tarefa.'
-      ].join('\n');
-
-      const history = Array.isArray(body.history)
-        ? body.history
-        : [];
-
-      const answer = await askModel(
-        taskInstructions,
-        prompt,
-        1600,
-        history
-      );
-
-      return send(res, 200, {
-        answer,
-        model: MODEL,
-        executed: false,
-        repositoryConnected: false
-      });
-    }
-
-    // --------------------------------------------------
-    // ARQUIVOS ESTÁTICOS DA INTERFACE
-    // --------------------------------------------------
-
-    if (
-      req.method === 'GET' &&
-      (url.pathname === '/' || url.pathname === '/index.html')
-    ) {
-      return send(res, 200, html, 'text/html; charset=utf-8');
-    }
-
-    if (
-      req.method === 'GET' &&
-      url.pathname === '/sessions-addon.js'
-    ) {
-      if (!fs.existsSync(SESSIONS_PATH)) {
-        return sendError(
-          res,
-          404,
-          'Arquivo sessions-addon.js não encontrado.'
-        );
-      }
-
-      const addon = fs.readFileSync(SESSIONS_PATH);
-
-      return send(
-        res,
-        200,
-        addon,
-        'text/javascript; charset=utf-8'
-      );
-    }
-
-    // --------------------------------------------------
-    // ROTAS DESCONHECIDAS
-    // --------------------------------------------------
-
-    if (url.pathname.startsWith('/api/')) {
-      return sendError(res, 404, 'Endpoint não encontrado.');
-    }
-
-    return sendError(res, 404, 'Página não encontrada.');
+    return sendError(res, 404, 'Rota não encontrada.');
 
   } catch (error) {
     if (res.writableEnded || res.destroyed) return;
 
-    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
-      return sendError(
-        res,
-        504,
-        'O Gemini demorou demais para responder.'
-      );
-    }
+    const status = Number.isInteger(error.status) ? error.status : 500;
 
-    const status = Number.isInteger(error.status)
-      ? error.status
-      : 500;
-
-    if (status >= 500) {
-      console.error('[TruckSafe AI]', error.message);
-    }
+    console.error('[TruckSafe AI]', error.message);
 
     return sendError(
       res,
       status,
-      status >= 500
-        ? (error.message || 'Falha interna do servidor.')
+      status >= 500 && status !== 502 && status !== 503 && status !== 504
+        ? 'Erro interno do servidor.'
         : error.message
     );
   }
 });
 
-// Limites adicionais para conexões HTTP.
 server.requestTimeout = 30000;
 server.headersTimeout = 15000;
 server.keepAliveTimeout = 5000;
 
 server.on('error', error => {
   console.error('[TruckSafe AI] Erro no servidor:', error.message);
-  process.exitCode = 1;
 });
 
-// ======================================================
-// INICIALIZAÇÃO
-// ======================================================
-
 server.listen(PORT, HOST, () => {
-  console.log(`TruckSafe AI Command disponível em http://${HOST}:${PORT}`);
+  console.log(`TruckSafe AI Command disponível na porta ${PORT}`);
   console.log(`Provedor: Gemini (${MODEL})`);
   console.log(`API: ${API_KEY ? 'chave configurada' : 'chave não configurada'}`);
-  console.log('Repositório conectado: não');
+  console.log('Repositório conectado: não (opcional)');
 });
