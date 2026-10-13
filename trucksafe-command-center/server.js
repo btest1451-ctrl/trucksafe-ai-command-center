@@ -85,7 +85,95 @@ function readJson(req) {
   });
 }
 
-async function askModel(instructions, prompt, maxOutputTokens = 1200) {
+
+async function askModel(
+  instructions,
+  prompt,
+  maxOutputTokens = 1200,
+  history = []
+) {
+  if (!API_KEY) {
+    throw Object.assign(
+      new Error("GEMINI_API_KEY não configurada."),
+      { status: 503 }
+    );
+  }
+
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`;
+
+  const safeHistory = Array.isArray(history)
+    ? history
+        .filter(
+          item =>
+            item &&
+            ["user", "model"].includes(item.role) &&
+            typeof item.text === "string"
+        )
+        .slice(-20)
+        .map(item => ({
+          role: item.role,
+          parts: [{ text: item.text.slice(0, 4000) }]
+        }))
+    : [];
+
+  const contents = [
+    ...safeHistory,
+    {
+      role: "user",
+      parts: [{ text: String(prompt).slice(0, 8000) }]
+    }
+  ];
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": API_KEY
+    },
+    body: JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: instructions }]
+      },
+      contents,
+      generationConfig: {
+        maxOutputTokens,
+        temperature: 0.7
+      }
+    }),
+    signal: AbortSignal.timeout(60000)
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const detail =
+      result.error?.message ||
+      `A API Gemini retornou HTTP ${response.status}.`;
+
+    const status = [400, 403, 404, 429].includes(response.status)
+      ? response.status
+      : 502;
+
+    throw Object.assign(new Error(detail), { status });
+  }
+
+  const answer = (result.candidates?.[0]?.content?.parts || [])
+    .filter(part => typeof part.text === "string")
+    .map(part => part.text)
+    .join("\n")
+    .trim();
+
+  if (!answer) {
+    throw Object.assign(
+      new Error("O Gemini retornou uma resposta vazia."),
+      { status: 502 }
+    );
+  }
+
+  return answer;
+}
+
   if (!API_KEY) {
     throw Object.assign(
       new Error('GEMINI_API_KEY não configurada. Configure a chave no .env do servidor.'),
@@ -254,11 +342,18 @@ const server = http.createServer(async (req, res) => {
         'Crie o plano solicitado. Não diga que executou a tarefa.'
       ].join('\n');
 
-      const answer = await askModel(
-        taskInstructions,
-        prompt,
-        1600
-      );
+      
+const history = Array.isArray(body.history)
+  ? body.history
+  : [];
+
+const answer = await askModel(
+  taskInstructions,
+  prompt,
+  1600,
+  history
+);
+      
 
       return send(res, 200, {
         answer,
